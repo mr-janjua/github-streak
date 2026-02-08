@@ -1,0 +1,14 @@
+[Unit]
+Description=GitHub Streak Tracker
+After=network.target
+
+[Service]
+Type=simple
+User=%u
+WorkingDirectory=%h
+ExecStart=/usr/bin/python3 %h/home/napier/Documents/Github2/streak/streak.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
