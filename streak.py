@@ -60,25 +60,79 @@ class GitHubStreakTracker:
             json.dump(self.streak_data, f, indent=2)
     
     def setup(self):
+        # If a config already exists, confirm before overwriting
+        existing = None
+        if self.config_file.exists():
+            try:
+                with open(self.config_file, 'r') as f:
+                    existing = json.load(f)
+            except Exception:
+                existing = None
+
+            print("Configuration already exists.")
+            if existing:
+                print(f"Username: {existing.get('username')}")
+
+            ans = input("Overwrite existing configuration? (y/N): ").strip().lower()
+            if ans != 'y':
+                print("Setup aborted. Existing configuration preserved.")
+                return
+
+            del_ans = input("Delete previous streak records as well? (y/N): ").strip().lower()
+            if del_ans == 'y':
+                try:
+                    if self.streak_file.exists():
+                        self.streak_file.unlink()
+                except Exception as e:
+                    print(f"Could not delete streak file: {e}")
+
+                self.streak_data = {
+                    'current_streak': 0,
+                    'longest_streak': 0,
+                    'last_commit_date': None,
+                    'total_days': 0,
+                    'commit_history': {}
+                }
+                self.save_streak_data()
+            else:
+                # Keep existing streak data if present
+                self.streak_data = self.load_streak_data()
+
         print("🔥 GitHub Streak Tracker Setup 🔥\n")
-        
-        self.username = input("Enter your GitHub username: ").strip()
-        
+
+        existing_username = existing.get('username') if existing else None
+        if existing_username:
+            prompt = f"Enter your GitHub username [{existing_username}]: "
+            inp = input(prompt).strip()
+            self.username = inp if inp else existing_username
+        else:
+            self.username = input("Enter your GitHub username: ").strip()
+
         print("\nTo get your GitHub Personal Access Token:")
         print("1. Go to https://github.com/settings/tokens")
         print("2. Generate new token (classic)")
         print("3. Select 'repo' and 'user' scopes")
         print("4. Copy the token\n")
-        
-        self.token = input("Enter your GitHub token: ").strip()
-        
+
+        existing_token = existing.get('token') if existing else None
+        if existing_token:
+            token_prompt = "Enter your GitHub token (leave blank to keep existing): "
+            token_inp = input(token_prompt).strip()
+            self.token = token_inp if token_inp else existing_token
+        else:
+            self.token = input("Enter your GitHub token: ").strip()
+
         print("\nReminder Mode:")
         print("1. Normal - Friendly reminders")
         print("2. Strict - Aggressive Duolingo-style reminders")
-        
-        mode_choice = input("Choose mode (1 or 2): ").strip()
+
+        current_mode = existing.get('reminder_mode', 'normal') if existing else 'normal'
+        default_choice = '2' if current_mode == 'strict' else '1'
+        mode_choice = input(f"Choose mode (1 or 2) [{default_choice}]: ").strip()
+        if mode_choice == '':
+            mode_choice = default_choice
         self.reminder_mode = "strict" if mode_choice == "2" else "normal"
-        
+
         self.save_config()
         print("\n✓ Setup complete!")
     
