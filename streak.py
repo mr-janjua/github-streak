@@ -111,8 +111,9 @@ class GitHubStreakTracker:
         print("\nTo get your GitHub Personal Access Token:")
         print("1. Go to https://github.com/settings/tokens")
         print("2. Generate new token (classic)")
-        print("3. Select 'repo' and 'user' scopes")
-        print("4. Copy the token\n")
+        print("3. Make sure you read and understand what a token is and the permissions it has!")
+        print("4. Select 'repo' and 'user' scopes")
+        print("5. Copy the token\n")
 
         existing_token = existing.get('token') if existing else None
         if existing_token:
